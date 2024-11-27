@@ -1,0 +1,95 @@
+import org.openqa.selenium.By;
+import org.openqa.selenium.JavascriptExecutor;
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
+import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.interactions.Actions;
+import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.openqa.selenium.support.ui.WebDriverWait;
+
+public class FitPeoAutomation {
+
+    public static void main(String[] args) {
+        System.setProperty("webdriver.chrome.driver", "./SW/chromedriver.exe");  // Update the path
+
+        // Initialize WebDriver and WebDriverWait
+        WebDriver driver = new ChromeDriver();
+        WebDriverWait wait = new 
+        		WebDriverWait(driver, 30);
+        JavascriptExecutor js = (JavascriptExecutor) driver;
+
+        try {
+            // Opening FitPeo Homepage
+            System.out.println("Opening FitPeo homepage...");
+            driver.get("https://fitpeo.com");
+            driver.manage().window().maximize();
+            Thread.sleep(3000);  // Sleep for 3 seconds to ensure page loads
+
+            // Click on Revenue Calculator Link
+            System.out.println("Clicking on Revenue Calculator link...");
+            WebElement revenueCalculatorLink = wait.until(ExpectedConditions.elementToBeClickable(By.linkText("Revenue Calculator")));
+            revenueCalculatorLink.click();
+            Thread.sleep(3000);  // Sleep for 3 seconds to ensure navigation
+
+            // Scroll to the slider section
+            System.out.println("Scrolling to the slider section...");
+            WebElement sliderSection = wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("slider-section")));
+            js.executeScript("arguments[0].scrollIntoView(true);", sliderSection);
+            Thread.sleep(2000);  // Wait for scroll action to complete
+
+            // Adjust slider to 820
+            System.out.println("Adjusting slider to 820...");
+            WebElement slider = driver.findElement(By.id("revenue-slider"));
+            int width = slider.getSize().width;
+            Actions actions = new Actions(driver);
+            actions.dragAndDropBy(slider, (int) (0.8 * width), 0).perform();
+            Thread.sleep(3000);  // Sleep to ensure slider action is completed
+
+            // Validate if the text field updated to 820
+            WebElement textField = driver.findElement(By.id("revenue-value"));
+            wait.until(ExpectedConditions.attributeToBe(textField, "value", "820"));
+            System.out.println("Slider adjusted and value set to 820.");
+
+            // Update text field to 560
+            System.out.println("Updating text field to 560...");
+            textField.clear();
+            textField.sendKeys("560");
+            Thread.sleep(2000);  // Sleep to allow time for text field to update
+
+            // Validate if slider updates to reflect 560
+            WebElement sliderAfterTextChange = driver.findElement(By.id("revenue-slider"));
+            wait.until(ExpectedConditions.attributeToBe(sliderAfterTextChange, "value", "560"));
+            System.out.println("Text field updated and slider reflects 560.");
+
+            // Select CPT codes
+            System.out.println("Selecting CPT codes...");
+            String[] cptCodes = {"99091", "99453", "99454", "99474"};
+            for (String code : cptCodes) {
+                WebElement checkbox = driver.findElement(By.id("cpt-" + code));
+                if (!checkbox.isSelected()) {
+                    checkbox.click();
+                }
+            }
+            System.out.println("Selected CPT codes.");
+
+            // Validate Total Recurring Reimbursement
+            System.out.println("Validating Total Recurring Reimbursement...");
+            WebElement reimbursementHeader = driver.findElement(By.id("total-reimbursement"));
+            String actualValue = reimbursementHeader.getText();
+            if (actualValue.contains("$110700")) {
+                System.out.println("Total Reimbursement validation passed.");
+            } else {
+                throw new Exception("Total Reimbursement validation failed. Found: " + actualValue);
+            }
+
+            System.out.println("All test cases passed successfully!");
+
+        } catch (Exception e) {
+            System.out.println("Test case failed: " + e.getMessage());
+            e.printStackTrace();  // Print full stack trace for debugging
+        } finally {
+            driver.quit();
+            System.out.println("Test completed. Browser closed.");
+        }
+    }
+}
